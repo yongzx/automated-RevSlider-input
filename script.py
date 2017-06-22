@@ -117,7 +117,7 @@ topic1 = TopicData()
 wb1 = openpyxl.load_workbook("test.xlsx")
 sheet1 = wb1.get_sheet_by_name("Sheet1")
 video1.read(topic1,sheet1)
-#print(video1)
+print(video1)
 #workbook_name = input("Excel doc: ")
 #sheet_name = input("Sheet name: ")
 #print(len(video1))
@@ -162,14 +162,69 @@ class Output:
         changed = re.sub(string_to_replace, replacement_string, self.head_text)
         self.head_text = changed
 
-    def modify_Body(self, row, txtfile1, txtfile2):
-        for key in range(0,len(video1[row])):
-            if key == 3 or key == 4 or key == 5 or key == 8 or key == 11:
-                self.modify_Body1(row, key, txtfile1)
-            else:
-                self.modify_Body2(row, key, txtfile2) 
+    def modify_Body(self, row, body_text, video_class):
+        for key in range(1,len(video_class[row])+1):
+            if len(video_class[row][key]) == 4:
+                self.modify_Body1(row, key, body_text, video_class)
+            else if len(video_class[row][key]) > 4:
+                self.modify_Body2(row, key, body_text,video_class)
 
-    def modify_Body1(self, row, key, txtfile):
+    def modify_Body2(self, row, key, txtfile, video_class):
+        loop_index = 1  #negate the name
+        title_index = 1
+        while (loop_index<len(video_class[row][key])):
+            title_pre_replacement = video_class[row][key][TITLE] + ' part ' + str(title_index)
+            title_index +=1
+
+            if len(video_class[row][key][loop_index]) > 6:
+                id_pre_replacement = str(video_class[row][key][loop_index])
+                loop_index +=1
+
+            if len(video_class[row][key][loop_index]) <= 6:
+                start_time_pre_replacement = str(video_class[row][key][loop_index])
+                loop_index +=1
+                end_time_pre_replacement = str(video_class[row][key][loop_index])
+                loop_index +=1
+
+            index_to_replace = r'xi:0';
+            index_replacement_in_tuple = ('i:', str(title_index-1))
+            index_replacement_string = ''.join(index_replacement_in_tuple)
+
+            slide_order_to_replace = r's:11:"slide_order";s:1:"1"'
+            slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(title_index))), ':"', str(title_index), '"')
+            slide_order_replacement_string = ''.join(slide_order_replacement_in_tuple)
+
+            title_to_replace = r's:15:"Bozeman Science"'
+            title_replacement_in_tuple = ('s:', str(len(title_pre_replacement)), ':"', title_pre_replacement, '"')
+            title_replacement_string = ''.join(title_replacement_in_tuple)
+
+            size_id_to_replace = r's:11:"wxvERNlUdBQ"'
+            size_id_replacement_in_tuple = ('s:', str(len(id_pre_replacement)), ':"', id_pre_replacement, '"')
+            size_id_replacement_string = ''.join(size_id_replacement_in_tuple)
+
+            id_to_replace = r'wxvERNlUdBQ'
+            id_replacement_string = video_class[row][key][ID]
+
+            start_time_to_replace = r's:4:"4:30"'
+            start_time_replacement_in_tuple = ('s:', str(len(start_time_pre_replacement)), ':"', start_time_pre_replacement, '"')
+            start_time_replacement_string = ''.join(start_time_replacement_in_tuple)
+
+            end_time_to_replace = r's:4:"9:06"'
+            end_time_replacement_in_tuple = ('s:', str(len(end_time_pre_replacement)), ':"', end_time_pre_replacement, '"')
+            end_time_replacement_string = ''.join(end_time_replacement_in_tuple)
+
+            sub_index = re.sub(index_to_replace, index_replacement_string, txtfile)
+            sub_slide_order = re.sub(slide_order_to_replace, slide_order_replacement_string, sub_index)
+            sub_title = re.sub(title_to_replace, title_replacement_string, sub_slide_order)
+            sub_size_id = re.sub(size_id_to_replace, size_id_replacement_string, sub_title)
+            sub_id = re.sub(id_to_replace, id_replacement_string, sub_size_id)
+            sub_start_time = re.sub(start_time_to_replace, start_time_replacement_string, sub_id)
+            sub_end_time = re.sub(end_time_to_replace, end_time_replacement_string, sub_start_time)
+
+            self.list_body_text.append(sub_end_time)
+
+
+    def modify_Body1(self, row, key, txtfile, video_class):
         index_to_replace = r'xi:0';
         index_replacement_in_tuple = ('i:', str(key))
         index_replacement_string = ''.join(index_replacement_in_tuple)
@@ -179,60 +234,22 @@ class Output:
         slide_order_replacement_string = ''.join(slide_order_replacement_in_tuple)
 
         title_to_replace = r's:15:"Bozeman Science"'
-        title_replacement_in_tuple = ('s:', str(len(video1[row][key+1][TITLE])), ':"', video1[row][key+1][TITLE], '"')
+        title_replacement_in_tuple = ('s:', str(len(video_class[row][key][TITLE])), ':"', video_class[row][key][TITLE], '"')
         title_replacement_string = ''.join(title_replacement_in_tuple)
 
         size_id_to_replace = r's:11:"wxvERNlUdBQ"'
-        size_id_replacement_in_tuple = ('s:', str(len(video1[row][key+1][ID])), ':"', video1[row][key+1][ID], '"')
+        size_id_replacement_in_tuple = ('s:', str(len(video_class[row][key][ID])), ':"', video_class[row][key][ID], '"')
         size_id_replacement_string = ''.join(size_id_replacement_in_tuple)
 
         id_to_replace = r'wxvERNlUdBQ'
-        id_replacement_string = video1[row][key+1][ID]
+        id_replacement_string = video_class[row][key][ID]
 
         start_time_to_replace = r's:4:"4:30"'
-        start_time_replacement_in_tuple = ('s:', str(len(video1[row][key+1][START_TIME])), ':"', video1[row][key+1][START_TIME], '"')
+        start_time_replacement_in_tuple = ('s:', str(len(video_class[row][key][START_TIME])), ':"', video_class[row][key][START_TIME], '"')
         start_time_replacement_string = ''.join(start_time_replacement_in_tuple)
 
         end_time_to_replace = r's:4:"9:06"'
-        end_time_replacement_in_tuple = ('s:', str(len(video1[row][key+1][END_TIME])), ':"', video1[row][key+1][END_TIME], '"')
-        end_time_replacement_string = ''.join(end_time_replacement_in_tuple)
-
-        sub_index = re.sub(index_to_replace, index_replacement_string, txtfile)
-        sub_slide_order = re.sub(slide_order_to_replace, slide_order_replacement_string, sub_index)
-        sub_title = re.sub(title_to_replace, title_replacement_string, sub_slide_order)
-        sub_size_id = re.sub(size_id_to_replace, size_id_replacement_string, sub_title)
-        sub_id = re.sub(id_to_replace, id_replacement_string, sub_size_id)
-        sub_start_time = re.sub(start_time_to_replace, start_time_replacement_string, sub_id)
-        sub_end_time = re.sub(end_time_to_replace, end_time_replacement_string, sub_start_time)
-
-        self.list_body_text.append(sub_end_time)
-
-    def modify_Body2(self, row, key, txtfile):
-        index_to_replace = r'xi:5';
-        index_replacement_in_tuple = ('i:', str(key))
-        index_replacement_string = ''.join(index_replacement_in_tuple)
-
-        slide_order_to_replace = r's:11:"slide_order";s:1:"6"'
-        slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(key+1))), ':"', str(key+1), '"')
-        slide_order_replacement_string = ''.join(slide_order_replacement_in_tuple)
-
-        title_to_replace = r's:11:"David Walz "'
-        title_replacement_in_tuple = ('s:', str(len(video1[row][key+1][TITLE])), ':"', video1[row][key+1][TITLE], '"')
-        title_replacement_string = ''.join(title_replacement_in_tuple)
-
-        size_id_to_replace = r's:11:"gGsiCP44nms"'
-        size_id_replacement_in_tuple = ('s:', str(len(video1[row][key+1][ID])), ':"', video1[row][key+1][ID], '"')
-        size_id_replacement_string = ''.join(size_id_replacement_in_tuple)
-
-        id_to_replace = r'gGsiCP44nms'
-        id_replacement_string = video1[row][key+1][ID]
-
-        start_time_to_replace = r's:0:"xstart"'
-        start_time_replacement_in_tuple = ('s:', str(len(video1[row][key+1][START_TIME])), ':"', video1[row][key+1][START_TIME], '"')
-        start_time_replacement_string = ''.join(start_time_replacement_in_tuple)
-
-        end_time_to_replace = r's:0:"xend"'
-        end_time_replacement_in_tuple = ('s:', str(len(video1[row][key+1][END_TIME])), ':"', video1[row][key+1][END_TIME], '"')
+        end_time_replacement_in_tuple = ('s:', str(len(video_class[row][key][END_TIME])), ':"', video_class[row][key][END_TIME], '"')
         end_time_replacement_string = ''.join(end_time_replacement_in_tuple)
 
         sub_index = re.sub(index_to_replace, index_replacement_string, txtfile)
@@ -247,8 +264,8 @@ class Output:
 
     #combine all the bodies
     #each body contain information for a single video
-    def joinBody(self, row):
-        self.modify_Body(row, self.body_text01, self.body_text02)
+    def joinBody(self, row, video_class):
+        self.modify_Body(row, self.body_text0, video_class)
         return self.list_body_text
     
     def modify_SystemId(self, txtfile):
@@ -293,3 +310,4 @@ template = Output("template_head.txt","template_body1.txt","template_end.txt")
 #template.modify_HeadSegment(0)
 #print(template.head_text)
 #template.modify_SystemId('systemID.txt')
+print(template.joinBody(0,video1))
