@@ -1,0 +1,1 @@
+}s:13:"static_slides";a:1:{i:0;a:4:{s:6:"params";a:2:{s:15:"background_type";s:5:"trans";s:5:"image";s:0:"";}s:11:"slide_order";s:0:"";s:6:"layers";a:0:{}s:8:"settings";a:0:{}}}}
