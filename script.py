@@ -117,7 +117,7 @@ topic1 = TopicData()
 wb1 = openpyxl.load_workbook("test.xlsx")
 sheet1 = wb1.get_sheet_by_name("Sheet1")
 video1.read(topic1,sheet1)
-print(video1)
+#print(video1)
 #workbook_name = input("Excel doc: ")
 #sheet_name = input("Sheet name: ")
 #print(len(video1))
@@ -166,7 +166,7 @@ class Output:
         for key in range(1,len(video_class[row])+1):
             if len(video_class[row][key]) == 4:
                 self.modify_Body1(row, key, body_text, video_class)
-            else if len(video_class[row][key]) > 4:
+            elif len(video_class[row][key]) > 4:
                 self.modify_Body2(row, key, body_text,video_class)
 
     def modify_Body2(self, row, key, txtfile, video_class):
@@ -225,12 +225,6 @@ class Output:
 
 
     def modify_Body1(self, row, key, txtfile, video_class):
-                self.modify_Body1(row, key, body_text)
-
-    def modify_body(self, row, key, txtfile):
-    	pass
-
-    def modify_Body1(self, row, key, txtfile):
         index_to_replace = r'xi:0';
         index_replacement_in_tuple = ('i:', str(key))
         index_replacement_string = ''.join(index_replacement_in_tuple)
@@ -291,13 +285,13 @@ class Output:
         self.list_body_text = []
 
     #export the txt which is read to be imported
-    def export(self,row): 
+    def export(self,row,video_class): 
         #modify the header of template
         self.modify_HeadSegment(row)
         self.modify_HeadSlidesN(row)
 
         #modify body
-        body_in_list = self.joinBody(row)
+        body_in_list = self.joinBody(row,video_class)
         body = ''.join(body_in_list)
         self.modify_SystemId('systemId.txt')        
         self.body_text = body
@@ -311,9 +305,9 @@ class Output:
 
 
 template = Output("template_head.txt","template_body1.txt","template_end.txt")
-#template.export(2)
+template.export(0,video1)
 #template.modify_HeadSlidesN(0)
 #template.modify_HeadSegment(0)
 #print(template.head_text)
 #template.modify_SystemId('systemID.txt')
-print(template.joinBody(0,video1))
+#print(template.joinBody(0,video1))
