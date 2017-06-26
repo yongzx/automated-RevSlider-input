@@ -1,113 +1,138 @@
-import openpyxl #open Excel file
+import openpyxl
 import copy #for deep copy
 import re
-
-#to access individual Topic data, ExcelData_instance[row_number-1][column_number][category]
+    
 
 #category --> title, id, start time, end time
 TITLE, ID, START_TIME, END_TIME = range(4)
 TEXT_INFO = 3
 
-#ExcelData contains all the data in a Excel sheet
+
 class ExcelData:
+    """
+    ExcelData contains all the data in a Excel sheet
+    
+    Container: list
+    To access individual Topic data, ExcelData_instance[row_number-2][column_number][category]
+    
+    Functions:
+    read(TopicData object, Excel) : add all the information in the Excel into _m_list. TopicData stores the information contained in 
+    an individual cell. 
+    """
     def __init__(self):
-        self.m_list = []
+        self._m_list = []
 
     def __getitem__(self,index):
-        return self.m_list[index]
+        return self._m_list[index]
 
     def __len__(self):
-        return len(self.m_list)
+        return len(self._m_list)
 
     def __str__(self):
-        return str(self.m_list)
+        return str(self._m_list)
 
     def __repr__(self):
         return self.__str__()
 
-    #add the TopicData instance containing video infomration of a particular topic into ExcelData m_list
     def read(self,topicdata,worksheet):
         max_row = worksheet.max_row
         max_column = worksheet.max_column
-        #print(max_row, max_column)
         for row in range(2,max_row+1):
             for col in range(4,max_column+1):
                 cell_var = worksheet.cell(row = row, column = col).value    #cell_val is a string
-                #print(cell_var)
                 if cell_var is None:
                     continue
-                list1 = cell_var.split('\n')
-                topicdata.add(col, list1)
-            topicdata.splitTime()                         #split the duration into start time and end time
+                list_cell_var = cell_var.split('\n')
+                topicdata.add(col, list_cell_var)       #add the information in a cell into the Topicdata object
+            topicdata.splitTime()                       #split the duration into start time and end time
             topic_deepcopy = copy.deepcopy(topicdata)   #deepcopy to avoid aliasing
-            self.m_list.append(topic_deepcopy)
-            topicdata.empty()
+            self._m_list.append(topic_deepcopy)
+            topicdata.empty()                           #empty the Topicdata object
 
 
-# TopicData object contains all the video information for a particular topic
 class TopicData:
-    
+    """
+    TopicData object contains the information in a particular cell
+    Container: dictionary
+    key --> column number
+    value --> list(   TITLE, (ID, (START_TIME, END_TIME))   ) 
+
+    Functions:
+    add() : add the video information of one cell (in list form) into the container. 
+    empty() : empty the container
+    split() : split the raw time input into start time and end time 
+    """
     def __init__(self):
-        self.m_dict = {}
+        self._m_dict = {}
 
     def __getitem__(self,key):
-        return self.m_dict[key]
+        return self._m_dict[key]
 
     def __len__(self):
-        return len(self.m_dict)
+        return len(self._m_dict)
 
     def __str__(self):
-        return str(self.m_dict)
+        return str(self._m_dict)
     
     def __repr__(self):
         return self.__str__()
 
     #implement deepcopy to avoid aliasing when the TopicData instance is appended into VideoData instance 
     def __deepcopy__(self, memo):
-        return copy.deepcopy(self.m_dict)
-
-    #add the video information of one cell (in list form) into m_dict. 
-    #col_n -- column number
-    #list_var contains 3 things of each column: title, iD, raw time
+        return copy.deepcopy(self._m_dict)
+ 
     def add(self, col_n, list_var):
-        self.m_dict[col_n - TEXT_INFO] = list_var
+        """
+        col_n -- column number
+        list_var contains 3 things of each column: title, iD, raw time
+        """
+        self._m_dict[col_n - TEXT_INFO] = list_var
 
-    #empty the m_dict
     def empty(self):
-        self.m_dict = {}
+        self._m_dict = {}
 
 
-    #split the raw time into start time and end time
-    def splitTime(self):
-        
-        for i in range(1, len(self.m_dict)+1):
+    def splitTime(self):        
+        for i in range(1, len(self._m_dict)+1):
 
             split_time_list = []
-            split_time_list.append(self.m_dict[i][TITLE])
-            split_time_list.append(self.m_dict[i][ID])
+            split_time_list.append(self._m_dict[i][TITLE])
+            split_time_list.append(self._m_dict[i][ID])
 
-            for raw_time_input in range(2, len(self.m_dict[i])):
+            for raw_time_input in range(2, len(self._m_dict[i])):
                 
-                temp_str = self.m_dict[i][raw_time_input]
-                #print(temp_str)
+                temp_str = self._m_dict[i][raw_time_input]
+
                 #if the raw time is 'whole' --> split into '' and ''
                 if temp_str == 'whole':
                     split_time_list.append('')
                     split_time_list.append('')
 
-                #the raw time is split into start time and end time     
+                #split raw time into start time and end time     
                 else:
-                    #assuming youtube ID doesn't have hyphen
-                    temp_list = temp_str.split('-')        #list temp_list contains 2 items: start time, end time
-                    if len(temp_list) == 1:
-                        split_time_list.append(temp_list[0])
-                    else:    
+                    if self.checkTime(temp_str) is False:
+                        split_time_list.append(temp_str)    #put ID back
+                    
+                    else:
+                        temp_list = temp_str.split('-')                             
                         for j in range(0,len(temp_list)):
                             if temp_list[j] == 'start' or temp_list[j] == 'end':
                                 temp_list[j] = ''
                         split_time_list.append(temp_list[0])
                         split_time_list.append(temp_list[1])
-            self.m_dict[i]=split_time_list
+            self._m_dict[i] = split_time_list
+    
+    def checkTime(self, string):
+        temp_list = string.split('-')
+        if len(temp_list) ==2:
+            if temp_list[0] =='start' or temp_list[1] =='end':
+                return True
+            elif re.search(":", string):
+                return True
+            else:
+                return False
+        else:
+            return False
 
 video1 = ExcelData()
 topic1 = TopicData()
@@ -117,7 +142,7 @@ topic1 = TopicData()
 wb1 = openpyxl.load_workbook("test.xlsx")
 sheet1 = wb1.get_sheet_by_name("Sheet1")
 video1.read(topic1,sheet1)
-#print(video1)
+print(video1)
 #workbook_name = input("Excel doc: ")
 #sheet_name = input("Sheet name: ")
 #print(len(video1))
@@ -187,11 +212,11 @@ class Output:
                 loop_index +=1
 
             index_to_replace = r'xi:0';
-            index_replacement_in_tuple = ('i:', str(title_index-1))
+            index_replacement_in_tuple = ('i:', str(key+title_index-1))
             index_replacement_string = ''.join(index_replacement_in_tuple)
 
             slide_order_to_replace = r's:11:"slide_order";s:1:"1"'
-            slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(title_index))), ':"', str(title_index), '"')
+            slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(key+title_index))), ':"', str(key+title_index), '"')
             slide_order_replacement_string = ''.join(slide_order_replacement_in_tuple)
 
             title_to_replace = r's:15:"Bozeman Science"'
@@ -203,7 +228,7 @@ class Output:
             size_id_replacement_string = ''.join(size_id_replacement_in_tuple)
 
             id_to_replace = r'wxvERNlUdBQ'
-            id_replacement_string = video_class[row][key][ID]
+            id_replacement_string = id_pre_replacement
 
             start_time_to_replace = r's:4:"4:30"'
             start_time_replacement_in_tuple = ('s:', str(len(start_time_pre_replacement)), ':"', start_time_pre_replacement, '"')
@@ -226,11 +251,11 @@ class Output:
 
     def modify_Body1(self, row, key, txtfile, video_class):
         index_to_replace = r'xi:0';
-        index_replacement_in_tuple = ('i:', str(key))
+        index_replacement_in_tuple = ('i:', str(key-1))
         index_replacement_string = ''.join(index_replacement_in_tuple)
 
         slide_order_to_replace = r's:11:"slide_order";s:1:"1"'
-        slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(key+1))), ':"', str(key+1), '"')
+        slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(key))), ':"', str(key), '"')
         slide_order_replacement_string = ''.join(slide_order_replacement_in_tuple)
 
         title_to_replace = r's:15:"Bozeman Science"'
@@ -305,7 +330,7 @@ class Output:
 
 
 template = Output("template_head.txt","template_body1.txt","template_end.txt")
-template.export(0,video1)
+template.export(1,video1)
 #template.modify_HeadSlidesN(0)
 #template.modify_HeadSegment(0)
 #print(template.head_text)
