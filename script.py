@@ -155,6 +155,7 @@ class Output:
     read template files.
     replace the information in the template file with the data from the ExcelData.
     """
+    
     def __init__(self, head_file, body_file, end_file):
         tmp_head_file = open(head_file, 'r+')
         tmp_body_file = open(body_file, 'r+')
@@ -168,21 +169,22 @@ class Output:
         self.body_text = copy.deepcopy(self.body_text0)
 
         self.list_body_text = []
-        
-    def modify_HeadSegment(self,n):
+        self.SLIDE_ORDER = 1
+        self.INDEX = 0
+
+    def modify_HeadSegment(self,row):
         #segment number
         #row_number = range(1,len(video1))
         string_to_replace = r's:5:"title";s:2:"i1";s:5:"alias";s:2:"i1";s:9:"shortcode";s:23:"\[rev_slider alias="i1"]"'
-        replacement_in_tuple = ('s:5:"title";s:2:"i',str(n+1),'";s:5:"alias";s:2:"i',str(n+1),\
-            '";s:9:"shortcode";s:23:"[rev_slider alias="i', str(n+1), '"]"')
+        replacement_in_tuple = ('s:5:"title";s:2:"i',str(row),'";s:5:"alias";s:2:"i',str(row),\
+            '";s:9:"shortcode";s:23:"[rev_slider alias="i', str(row), '"]"')
         replacement_string = ''.join(replacement_in_tuple)
         changed = re.sub(string_to_replace, replacement_string, self.head_text)
         self.head_text = changed
 
-    def modify_HeadSlidesN(self, n):
-        number_of_slides = len(video1[n])
+    def modify_HeadSlidesN(self):
         string_to_replace = r's:17:"custom_javascript";s:0:"";}s:6:"slides";a:7:{'
-        replacement_in_tuple = ('s:17:"custom_javascript";s:0:"";}s:6:"slides";a:', str(number_of_slides), ':{')
+        replacement_in_tuple = ('s:17:"custom_javascript";s:0:"";}s:6:"slides";a:', str(self.SLIDE_ORDER), ':{')
         replacement_string = ''.join(replacement_in_tuple)
         changed = re.sub(string_to_replace, replacement_string, self.head_text)
         self.head_text = changed
@@ -197,8 +199,22 @@ class Output:
     def modify_Body2(self, row, key, txtfile, video_class):
         loop_index = 1  #negate the name
         title_index = 1
+        total_title_index = 0
+
         while (loop_index<len(video_class[row][key])):
-            title_pre_replacement = video_class[row][key][TITLE] + ' part ' + str(title_index)
+            total_title_index +=1
+
+            if len(video_class[row][key][loop_index]) > 6:
+                loop_index +=1
+
+            if len(video_class[row][key][loop_index]) <= 6:
+                loop_index +=1
+                loop_index +=1
+
+        loop_index = 1 #reset loop index
+
+        while (loop_index<len(video_class[row][key])):
+            title_pre_replacement = video_class[row][key][TITLE] + ' part ' + str(title_index) + '/' + str(total_title_index)
             title_index +=1
 
             if len(video_class[row][key][loop_index]) > 6:
@@ -212,12 +228,14 @@ class Output:
                 loop_index +=1
 
             index_to_replace = r'xi:0';
-            index_replacement_in_tuple = ('i:', str(key+title_index-1))
+            index_replacement_in_tuple = ('i:', str(self.INDEX))
             index_replacement_string = ''.join(index_replacement_in_tuple)
+            self.INDEX += 1
 
             slide_order_to_replace = r's:11:"slide_order";s:1:"1"'
-            slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(key+title_index))), ':"', str(key+title_index), '"')
+            slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(self.SLIDE_ORDER))), ':"', str(self.SLIDE_ORDER), '"')
             slide_order_replacement_string = ''.join(slide_order_replacement_in_tuple)
+            self.SLIDE_ORDER +=1
 
             title_to_replace = r's:15:"Bozeman Science"'
             title_replacement_in_tuple = ('s:', str(len(title_pre_replacement)), ':"', title_pre_replacement, '"')
@@ -251,12 +269,14 @@ class Output:
 
     def modify_Body1(self, row, key, txtfile, video_class):
         index_to_replace = r'xi:0';
-        index_replacement_in_tuple = ('i:', str(key-1))
+        index_replacement_in_tuple = ('i:', str(self.INDEX))
         index_replacement_string = ''.join(index_replacement_in_tuple)
+        self.INDEX +=1
 
         slide_order_to_replace = r's:11:"slide_order";s:1:"1"'
-        slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(key))), ':"', str(key), '"')
+        slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(len(str(self.SLIDE_ORDER))), ':"', str(self.SLIDE_ORDER), '"')
         slide_order_replacement_string = ''.join(slide_order_replacement_in_tuple)
+        self.SLIDE_ORDER += 1
 
         title_to_replace = r's:15:"Bozeman Science"'
         title_replacement_in_tuple = ('s:', str(len(video_class[row][key][TITLE])), ':"', video_class[row][key][TITLE], '"')
@@ -311,17 +331,16 @@ class Output:
 
     #export the txt which is read to be imported
     def export(self,row,video_class): 
-        #modify the header of template
-        self.modify_HeadSegment(row)
-        self.modify_HeadSlidesN(row)
 
         #modify body
-        body_in_list = self.joinBody(row,video_class)
+        body_in_list = self.joinBody(row-2,video_class)
         body = ''.join(body_in_list)
         self.modify_SystemId('systemId.txt')        
         self.body_text = body
 
-
+        #modify the header of template
+        self.modify_HeadSegment(row-1)
+        self.modify_HeadSlidesN()
         final = self.head_text + self.body_text + self.end_text0      #concatenate the header, the body and the footer
         test = open("test.txt",'w')
         test.truncate()
@@ -330,7 +349,7 @@ class Output:
 
 
 template = Output("template_head.txt","template_body1.txt","template_end.txt")
-template.export(1,video1)
+template.export(3,video1)
 #template.modify_HeadSlidesN(0)
 #template.modify_HeadSegment(0)
 #print(template.head_text)
