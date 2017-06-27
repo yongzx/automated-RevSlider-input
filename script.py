@@ -35,6 +35,18 @@ class ExcelData:
         return self.__str__()
 
     def read(self,topicdata,worksheet):
+    	"""
+		Append the Topicdata objects into the ExcelData _m.list 
+
+		Arguments:
+		self --- ExcelData
+		topicdata --- TopicData object, which stores information of an individual cell in a dictionary container
+		worksheet --- Excel worksheet
+		
+		Return:
+		None
+
+    	"""
         max_row = worksheet.max_row
         max_column = worksheet.max_column
         for row in range(2,max_row+1):
@@ -83,23 +95,37 @@ class TopicData:
  
     def add(self, col_n, list_var):
         """
-        col_n -- column number
-        list_var contains 3 things of each column: title, iD, raw time
+		Append the information in a cell into the _m_dict.
+
+		Arguments: 
+        self --- TopicData object
+        col_n (key) --- column number
+        list_var (value) --- a list of 3 things in each column: title, iD, raw time
+
+        Return: 
+        None
         """
         self._m_dict[col_n - TEXT_INFO] = list_var
 
     def empty(self):
+    	"""empty the _m_dict """
         self._m_dict = {}
 
 
-    def splitTime(self):        
+    def splitTime(self): 
+    	"""
+		split the raw time into start time and end time
+
+		return: None
+	
+    	"""       
         for i in range(1, len(self._m_dict)+1):
 
             split_time_list = []
             split_time_list.append(self._m_dict[i][TITLE])
             split_time_list.append(self._m_dict[i][ID])
 
-            for raw_time_input in range(2, len(self._m_dict[i])):
+            for raw_time_input in range(2, len(self._m_dict[i])): 	#start from 2 to ignore the title and the first ID
                 
                 temp_str = self._m_dict[i][raw_time_input]
 
@@ -123,8 +149,21 @@ class TopicData:
             self._m_dict[i] = split_time_list
     
     def checkTime(self, string):
+    	"""
+		check if the string is ID or raw time
+
+		Arguments:
+		self --- TopicData
+		string --- the information in the cell which has been stored in _m_dict
+
+		Return:
+		bool --- True if raw time, False if ID
+    	""" 
         temp_list = string.split('-')
+
+        #ID may contain hyphen
         if len(temp_list) ==2:
+        	#raw time consists of actual time, start, or end
             if temp_list[0] =='start' or temp_list[1] =='end':
                 return True
             elif re.search(":", string):
@@ -132,6 +171,7 @@ class TopicData:
             else:
                 return False
         else:
+       	#case where ID doesn't contain hyphen
             return False
 
 video1 = ExcelData()
@@ -143,11 +183,6 @@ wb1 = openpyxl.load_workbook("test.xlsx")
 sheet1 = wb1.get_sheet_by_name("Sheet1")
 video1.read(topic1,sheet1)
 print(video1)
-#workbook_name = input("Excel doc: ")
-#sheet_name = input("Sheet name: ")
-#print(len(video1))
-#print('s:5:"title";s:2:"i1";s:5:"alias";s:2:"i1";s:9:"shortcode";s:23:"[rev_slider alias="i1"]"')
-#print(r's:5:"title";s:2:"i1";s:5:"alias";s:2:"i1";s:9:"shortcode";s:23:"[rev_slider alias="i1"]"')
 
 
 class Output:
