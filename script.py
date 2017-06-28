@@ -5,7 +5,6 @@ import re
 
 #category --> title, id, start time, end time
 TITLE, ID, START_TIME, END_TIME = range(4)
-TEXT_INFO = 3
 
 
 class ExcelData:
@@ -16,55 +15,62 @@ class ExcelData:
     To access individual Topic data, ExcelData_instance[row_number-2][column_number][category]
     
     Functions:
-    read(TopicData object, Excel) : add all the information in the Excel into _m_list. TopicData stores the information contained in 
-    an individual cell. 
+    read(TopicData object, Excel) : add all the information in the Excel into m_list. TopicData stores the information in a particular row.
     """
     def __init__(self):
-        self._m_list = []
+        self.m_list = []
 
     def __getitem__(self,index):
-        return self._m_list[index]
+        return self.m_list[index]
 
     def __len__(self):
-        return len(self._m_list)
+        return len(self.m_list)
 
     def __str__(self):
-        return str(self._m_list)
+        return str(self.m_list)
 
     def __repr__(self):
         return self.__str__()
 
     def read(self,topicdata,worksheet):
-    	"""
-		Append the Topicdata objects into the ExcelData _m.list 
+        """
+        Append the Topicdata objects into the ExcelData _m.list 
 
-		Arguments:
-		self --- ExcelData
-		topicdata --- TopicData object, which stores information of an individual cell in a dictionary container
-		worksheet --- Excel worksheet
-		
-		Return:
-		None
+        Arguments:
+        self --- ExcelData
+        topicdata --- TopicData object, which stores information of an individual cell in a dictionary container
+        worksheet --- Excel worksheet
+        
+        Return:
+        None
 
-    	"""
+        """
         max_row = worksheet.max_row
         max_column = worksheet.max_column
+        count_video = 1
         for row in range(2,max_row+1):
+            count_video = 1
             for col in range(4,max_column+1):
                 cell_var = worksheet.cell(row = row, column = col).value    #cell_val is a string
                 if cell_var is None:
                     continue
                 list_cell_var = cell_var.split('\n')
-                topicdata.add(col, list_cell_var)       #add the information in a cell into the Topicdata object
-            topicdata.splitTime()                       #split the duration into start time and end time
-            topic_deepcopy = copy.deepcopy(topicdata)   #deepcopy to avoid aliasing
-            self._m_list.append(topic_deepcopy)
-            topicdata.empty()                           #empty the Topicdata object
+                topicdata.add(count_video, list_cell_var)       #add the information in a cell into the Topicdata object
+                count_video += 1
 
+            #check if the row is empty ()    
+            if topicdata.isEmpty():                             
+                continue
+
+            print(topicdata,'\n')
+            topicdata.splitTime()                               #split the duration into start time and end time
+            topic_deepcopy = copy.deepcopy(topicdata)           #deepcopy to avoid aliasing
+            self.m_list.append(topic_deepcopy)
+            topicdata.empty()                                   #empty the Topicdata object
 
 class TopicData:
     """
-    TopicData object contains the information in a particular cell
+    TopicData object contains the information in a particular row
     Container: dictionary
     key --> column number
     value --> list(   TITLE, (ID, (START_TIME, END_TIME))   ) 
@@ -75,59 +81,62 @@ class TopicData:
     split() : split the raw time input into start time and end time 
     """
     def __init__(self):
-        self._m_dict = {}
+        self.m_dict = {}
 
     def __getitem__(self,key):
-        return self._m_dict[key]
+        return self.m_dict[key]
 
     def __len__(self):
-        return len(self._m_dict)
+        return len(self.m_dict)
 
     def __str__(self):
-        return str(self._m_dict)
+        return str(self.m_dict)
     
     def __repr__(self):
         return self.__str__()
 
     #implement deepcopy to avoid aliasing when the TopicData instance is appended into VideoData instance 
     def __deepcopy__(self, memo):
-        return copy.deepcopy(self._m_dict)
+        return copy.deepcopy(self.m_dict)
  
-    def add(self, col_n, list_var):
+    def add(self, index, list_var):
         """
-		Append the information in a cell into the _m_dict.
+        Append the information in a cell into the m_dict.
 
-		Arguments: 
+        Arguments: 
         self --- TopicData object
-        col_n (key) --- column number
+        index (key) --- indexing number, starts from 1
         list_var (value) --- a list of 3 things in each column: title, iD, raw time
 
         Return: 
         None
         """
-        self._m_dict[col_n - TEXT_INFO] = list_var
+        self.m_dict[index] = list_var
 
     def empty(self):
-    	"""empty the _m_dict """
-        self._m_dict = {}
-
+        """empty the m_dict """
+        self.m_dict = {}
+    
+    def isEmpty(self):
+        """return True if the m_dict is empty"""
+        return not len(self.m_dict)
 
     def splitTime(self): 
-    	"""
-		split the raw time into start time and end time
+        """
+        split the raw time into start time and end time
 
-		return: None
-	
-    	"""       
-        for i in range(1, len(self._m_dict)+1):
+        return: None
+    
+        """       
+        for i in range(1, len(self.m_dict)+1):
 
             split_time_list = []
-            split_time_list.append(self._m_dict[i][TITLE])
-            split_time_list.append(self._m_dict[i][ID])
+            split_time_list.append(self.m_dict[i][TITLE])
+            split_time_list.append(self.m_dict[i][ID])
 
-            for raw_time_input in range(2, len(self._m_dict[i])): 	#start from 2 to ignore the title and the first ID
+            for raw_time_input in range(2, len(self.m_dict[i])):   #start from 2 to ignore the title and the first ID
                 
-                temp_str = self._m_dict[i][raw_time_input]
+                temp_str = self.m_dict[i][raw_time_input]
 
                 #if the raw time is 'whole' --> split into '' and ''
                 if temp_str == 'whole':
@@ -136,7 +145,7 @@ class TopicData:
 
                 #split raw time into start time and end time     
                 else:
-                    if self.checkTime(temp_str) is False:
+                    if self.isTime(temp_str) is False:
                         split_time_list.append(temp_str)    #put ID back
                     
                     else:
@@ -146,24 +155,24 @@ class TopicData:
                                 temp_list[j] = ''
                         split_time_list.append(temp_list[0])
                         split_time_list.append(temp_list[1])
-            self._m_dict[i] = split_time_list
+            self.m_dict[i] = split_time_list
     
-    def checkTime(self, string):
-    	"""
-		check if the string is ID or raw time
+    def isTime(self, string):
+        """
+        check if the string is ID or raw time
 
-		Arguments:
-		self --- TopicData
-		string --- the information in the cell which has been stored in _m_dict
+        Arguments:
+        self --- TopicData
+        string --- the information in the cell which has been stored in m_dict value
 
-		Return:
-		bool --- True if raw time, False if ID
-    	""" 
+        Return:
+        bool --- True if raw time, False if ID
+        """ 
         temp_list = string.split('-')
 
         #ID may contain hyphen
         if len(temp_list) ==2:
-        	#raw time consists of actual time, start, or end
+            #raw time consists of actual time, start, or end
             if temp_list[0] =='start' or temp_list[1] =='end':
                 return True
             elif re.search(":", string):
@@ -171,7 +180,7 @@ class TopicData:
             else:
                 return False
         else:
-       	#case where ID doesn't contain hyphen
+        #for case where ID doesn't contain hyphen
             return False
 
 video1 = ExcelData()
@@ -183,7 +192,7 @@ wb1 = openpyxl.load_workbook("test.xlsx")
 sheet1 = wb1.get_sheet_by_name("Sheet1")
 video1.read(topic1,sheet1)
 print(video1)
-
+print(len(video1))
 
 class Output:
     """
