@@ -52,7 +52,7 @@ class ExcelData:
             count_video = 1
             for col in range(4,max_column+1):
                 cell_var = worksheet.cell(row = row, column = col).value    #cell_val is a string
-                if cell_var is None:
+                if cell_var is None or re.match('\S', cell_var) is None:
                     continue
                 list_cell_var = cell_var.split('\n')
                 topicdata.add(count_video, list_cell_var)       #add the information in a cell into the Topicdata object
@@ -62,7 +62,7 @@ class ExcelData:
             if topicdata.isEmpty():                             
                 continue
 
-            print(topicdata,'\n')
+            #print(topicdata,'\n')
             topicdata.splitTime()                               #split the duration into start time and end time
             topic_deepcopy = copy.deepcopy(topicdata)           #deepcopy to avoid aliasing
             self.m_list.append(topic_deepcopy)
@@ -191,8 +191,8 @@ topic1 = TopicData()
 wb1 = openpyxl.load_workbook("test.xlsx")
 sheet1 = wb1.get_sheet_by_name("Sheet1")
 video1.read(topic1,sheet1)
-print(video1)
-print(len(video1))
+#print(video1)
+print("total slides: ", len(video1))
 
 class Output:
     """
@@ -400,6 +400,7 @@ class Output:
             with open("i{}.txt".format(num_slides), "w+") as f:
                 f.truncate()
                 f.write(final)
+                print("Generated: ", f)
 
             self.empty()
 
