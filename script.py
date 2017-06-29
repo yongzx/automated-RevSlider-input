@@ -1,7 +1,6 @@
 import openpyxl
 import copy #for deep copy
 import re
-    
 
 #category --> title, id, start time, end time
 TITLE, ID, START_TIME, END_TIME = range(4)
@@ -188,8 +187,19 @@ topic1 = TopicData()
 
 
 #read in Excel file and sheet name
-wb1 = openpyxl.load_workbook("test.xlsx")
-sheet1 = wb1.get_sheet_by_name("Sheet1")
+def readfile():
+    while True:
+        excel_name = input("Name of your Excel document (remember to put .xlsx in your input): ")
+        if re.search(".xlsx", excel_name) is None:
+            print("you forgot to put .xlsx in your file name")
+            continue
+        sheet_name = input("Name of the sheet: ")
+        return excel_name, sheet_name
+    
+
+excel_name, sheet_name = readfile()
+wb1 = openpyxl.load_workbook(excel_name)
+sheet1 = wb1.get_sheet_by_name(sheet_name)
 video1.read(topic1,sheet1)
 #print(video1)
 print("total slides: ", len(video1))
