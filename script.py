@@ -408,15 +408,22 @@ class Output:
         self.SLIDE_ORDER = 1
         self.INDEX = 0
 
-    def makedir(filename):
+    def makedir(self, file_name):
         try:
-            os.makedir(filename)
+            os.makedirs(file_name)
         except OSError:
             pass
-        os.chdir(filename)
+
+    def cddir(self, file_name):
+        os.chdir(file_name)
+
+    def exitdir(self):
+        os.chdir(os.path.dirname(os.path.dirname( os.path.abspath(__file__))))
 
     # export the txt which is read to be imported
     def export(self, excel_name, sheet_name, video_class):
+        file_name = "Exported {0} {1}".format(excel_name, sheet_name)
+        self.makedir(file_name)
 
         for num_slides in range(1, len(video_class) + 1):
             # modify body
@@ -434,11 +441,13 @@ class Output:
             # concatenate the header, the body and the footer
             final = self.head_text + self.body_text + self.end_text0
 
+            self.cddir(file_name)
             with open("{0} {1} i{2}.txt".format(excel_name, sheet_name, num_slides), "w+") as f:
                 f.truncate()
                 f.write(final)
                 print("Generated: ", f)
-
+            self.exitdir()
+            
             self.empty()
 
 
