@@ -1,6 +1,7 @@
 import openpyxl
 import copy  # for deep copy
 import re
+import os
 
 # category --> title, id, start time, end time
 TITLE, ID, START_TIME, END_TIME = range(4)
@@ -407,8 +408,15 @@ class Output:
         self.SLIDE_ORDER = 1
         self.INDEX = 0
 
+    def makedir(filename):
+        try:
+            os.makedir(filename)
+        except OSError:
+            pass
+        os.chdir(filename)
+
     # export the txt which is read to be imported
-    def export(self, video_class):
+    def export(self, excel_name, sheet_name, video_class):
 
         for num_slides in range(1, len(video_class) + 1):
             # modify body
@@ -426,7 +434,7 @@ class Output:
             # concatenate the header, the body and the footer
             final = self.head_text + self.body_text + self.end_text0
 
-            with open("i{}.txt".format(num_slides), "w+") as f:
+            with open("{0} {1} i{2}.txt".format(excel_name, sheet_name, num_slides), "w+") as f:
                 f.truncate()
                 f.write(final)
                 print("Generated: ", f)
@@ -446,7 +454,7 @@ def readFile():
             if re.search(".xlsx", excel_name) is None:
                 raise FileNameError
             excel_file = openpyxl.load_workbook(excel_name)
-            return excel_file
+            return excel_name, excel_file
         except FileNameError:
             print("You forgot to put .xlsx in your file name. \n")
         except FileNotFoundError:
@@ -459,7 +467,7 @@ def readSheet(excel_file):
         try:
             sheet_name = input("Sheet name: ")
             sheet = excel_file.get_sheet_by_name(sheet_name)
-            return sheet
+            return sheet_name, sheet
         except KeyError:
             print("Sheet '{0}' does not exist. \n".format(sheet_name))
 
@@ -472,12 +480,13 @@ if __name__ == "__main__":
                       "template_body1.txt", "template_end.txt")
 
     # obtain excel file and sheet name
-    excel_file = readFile()
-    sheet_name = readSheet(excel_file)
+    excel_name, excel_file = readFile()
+    sheet_name, sheet = readSheet(excel_file)
 
     # processing information in the particular sheet
-    video.read(topic, sheet_name)
+    video.read(topic, sheet)
 
     # output
     print("Total slides: ", len(video))
-    template.export(video)
+    template.export(excel_name, sheet_name, video)
+
