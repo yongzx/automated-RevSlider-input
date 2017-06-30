@@ -199,9 +199,9 @@ class Output:
     """
 
     def __init__(self, head_file, body_file, end_file):
-        tmp_head_file = open(head_file, 'r+')
-        tmp_body_file = open(body_file, 'r+')
-        tmp_end_file = open(end_file, 'r+')
+        tmp_head_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templates", head_file), 'r+')
+        tmp_body_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templates", body_file) , 'r+')
+        tmp_end_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templates", end_file), 'r+')
 
         self.head_text0 = tmp_head_file.read()
         self.body_text0 = tmp_body_file.read()
@@ -389,7 +389,7 @@ class Output:
         return self.list_body_text
 
     def modify_SystemId(self, txtfile):
-        base_system_id_file = open(txtfile, 'r+')
+        base_system_id_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templates", txtfile), 'r+')
         base_system_id = int(base_system_id_file.read())
         list_i = 0
         for Id in range(base_system_id, base_system_id + len(self.list_body_text)):
@@ -447,7 +447,7 @@ class Output:
                 f.write(final)
                 print("Generated: ", f)
             self.exitdir()
-            
+
             self.empty()
 
 
