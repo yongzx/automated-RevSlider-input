@@ -7,5 +7,5 @@ People who actively use RevSlider to create video layers may save the video info
 
 ## Instructions
 1. Install OpenPyxl library `$ pip install openpyxl`.
-2. Put python file *.py*, folder *template* , and your excel document *.xlsx* into the same folder.
+2. Put python file *.py*, folder "*Templates*" , and your excel document "*.xlsx*" into the same folder.
 3. Run the python file and input the name of the excel document which you want the python script to open. Remember to include .xlsx in your input.  
