@@ -2,6 +2,7 @@ import openpyxl
 import copy
 import re
 import os
+import sys
 
 # category --> title, id, start time, end time
 TITLE, ID, START_TIME, END_TIME = range(4)
@@ -10,7 +11,7 @@ TITLE, ID, START_TIME, END_TIME = range(4)
 class ExcelData:
     """
     ExcelData contains all the data in a Excel sheet
-    
+
     Arguments:
     None
 
@@ -79,7 +80,7 @@ class ExcelData:
 class TopicData:
     """
     TopicData object contains the information in a particular row
-    
+
     Arguments:
     None
 
@@ -202,7 +203,7 @@ class TopicData:
 class Output:
     """
     Read template files and replace the information in the template file with the data from the ExcelData.
-    
+
     Arguments:
     header template
     body template
@@ -222,13 +223,16 @@ class Output:
     exitdir(): exit from a folder
     export(): export multiple .txt files, which are ready to be imported into Wordpress database, into a newly created folder  
 
-    
+
     """
 
     def __init__(self, head_file, body_file, end_file):
-        tmp_head_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templates", head_file), 'r+')
-        tmp_body_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templates", body_file) , 'r+')
-        tmp_end_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templates", end_file), 'r+')
+        tmp_head_file = open(os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), "Templates", head_file), 'r+')
+        tmp_body_file = open(os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), "Templates", body_file), 'r+')
+        tmp_end_file = open(os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), "Templates", end_file), 'r+')
 
         self.head_text0 = tmp_head_file.read()
         self.body_text0 = tmp_body_file.read()
@@ -275,16 +279,18 @@ class Output:
         video_class --- Exceldata object
         """
         for key in range(1, len(video_class[row]) + 1):
-            if len(video_class[row][key]) == 4: 
-                self.modify_Body1(row, key, body_text, video_class) #create a slide
-            elif len(video_class[row][key]) > 4: 
-                self.modify_Body2(row, key, body_text, video_class) #create multiple slides
+            if len(video_class[row][key]) == 4:
+                self.modify_Body1(row, key, body_text,
+                                  video_class)  # create a slide
+            elif len(video_class[row][key]) > 4:
+                # create multiple slides
+                self.modify_Body2(row, key, body_text, video_class)
 
     def modify_Body1(self, row, key, txtfile, video_class):
         """
         modify the body template in the cell and put it in a list to be concatenated later.
         (for cell information == 4)
-        
+
         Arguments: 
         row --- particular row in an excel sheet. accessed from Exceldata object.
         key --- key-value pair, in which the key is paired with the information in a particular cell.  
@@ -293,13 +299,13 @@ class Output:
 
         """
 
-        #index
+        # index
         index_to_replace = r'xi:0'
         index_replacement_in_tuple = ('i:', str(self.INDEX))
         index_replacement_string = ''.join(index_replacement_in_tuple)
         self.INDEX += 1
 
-        #slide order
+        # slide order
         slide_order_to_replace = r's:11:"slide_order";s:1:"1"'
         slide_order_replacement_in_tuple = ('s:11:"slide_order";s:', str(
             len(str(self.SLIDE_ORDER))), ':"', str(self.SLIDE_ORDER), '"')
@@ -307,36 +313,36 @@ class Output:
             slide_order_replacement_in_tuple)
         self.SLIDE_ORDER += 1
 
-        #title of the video
+        # title of the video
         title_to_replace = r's:15:"Bozeman Science"'
         title_replacement_in_tuple = ('s:', str(
             len(video_class[row][key][TITLE])), ':"', video_class[row][key][TITLE], '"')
         title_replacement_string = ''.join(title_replacement_in_tuple)
 
-        #size of ID
+        # size of ID
         size_id_to_replace = r's:11:"wxvERNlUdBQ"'
         size_id_replacement_in_tuple = ('s:', str(
             len(video_class[row][key][ID])), ':"', video_class[row][key][ID], '"')
         size_id_replacement_string = ''.join(size_id_replacement_in_tuple)
 
-        #ID
+        # ID
         id_to_replace = r'wxvERNlUdBQ'
         id_replacement_string = video_class[row][key][ID]
 
-        #starting time
+        # starting time
         start_time_to_replace = r's:4:"4:30"'
         start_time_replacement_in_tuple = ('s:', str(len(video_class[row][key][
                                            START_TIME])), ':"', video_class[row][key][START_TIME], '"')
         start_time_replacement_string = ''.join(
             start_time_replacement_in_tuple)
 
-        #ending time 
+        # ending time
         end_time_to_replace = r's:4:"9:06"'
         end_time_replacement_in_tuple = ('s:', str(
             len(video_class[row][key][END_TIME])), ':"', video_class[row][key][END_TIME], '"')
         end_time_replacement_string = ''.join(end_time_replacement_in_tuple)
 
-        #modifying process
+        # modifying process
         sub_index = re.sub(index_to_replace, index_replacement_string, txtfile)
         sub_slide_order = re.sub(
             slide_order_to_replace, slide_order_replacement_string, sub_index)
@@ -462,7 +468,7 @@ class Output:
         Read in a unique ID. 
         Since currently wordpress database automatically updates the ID of the imported file, this member function
             does not update the system ID in the txtfile from which it reads in the system ID. 
-        
+
         Arguments:
         txtfile --- contains the ID number
 
@@ -470,7 +476,8 @@ class Output:
         None
 
         """
-        base_system_id_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Templates", txtfile), 'r+')
+        base_system_id_file = open(os.path.join(os.path.dirname(
+            os.path.abspath(__file__)), "Templates", txtfile), 'r+')
         base_system_id = int(base_system_id_file.read())
         list_i = 0
         for Id in range(base_system_id, base_system_id + len(self.list_body_text)):
@@ -498,22 +505,31 @@ class Output:
         """create a folder"""
         try:
             os.makedirs(file_name)
-        except OSError:
-            pass
+        except:
+            print(
+                "Unable to create the folder.\nPlease create a folder manually and try again.")
+            print("Folder name: Exported excel_name.xlsx sheet_name")
+            sys.exit()
 
     def cddir(self, file_name):
         """enter the folder"""
-        os.chdir(file_name)
+        try:
+            os.chdir(file_name)
+        except:
+            print(
+                "Unable to find the folder.\nPlease create a folder manually and try again.")
+            print("Folder name: Exported excel_name.xlsx sheet_name")
+            sys.exit()
 
     def exitdir(self):
         """exit from the folder to the main folder automated_RevSlider_input"""
-        os.chdir(os.path.dirname(os.path.dirname( os.path.abspath(__file__))))
+        os.chdir("..")
 
     # export the txt which is read to be imported
     def export(self, excel_name, sheet_name, video_class):
         """
         Create a folder and save multiple the txt files which are ready to be exported into the folder
-        
+
         Arguments:
         excel_name --- name of the excel file
         sheet_name --- name of the sheet
@@ -586,7 +602,7 @@ def readSheet(excel_file):
     """
     Prompt for the name of sheet
     Read in and open a particular sheet in the excel file
-    
+
     Arguments: 
     excel_file ---openpyxl workbook
 
@@ -602,7 +618,6 @@ def readSheet(excel_file):
             return sheet_name, sheet
         except KeyError:
             print("Sheet '{0}' does not exist. \n".format(sheet_name))
-
 
 
 if __name__ == "__main__":
@@ -621,4 +636,3 @@ if __name__ == "__main__":
     # output
     print("Total slides: ", len(video))
     template.export(excel_name, sheet_name, video)
-
