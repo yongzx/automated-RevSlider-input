@@ -3,7 +3,7 @@ This project intends to automate the creation of video layers in a Wordpress web
 The python file reads the excel document in which the raw information of Youtube videos (name, ID, duration) is stored and generates a text file that is ready to be imported into RevSlider.
 
 ## Motivation
-People who actively use RevSlider to create video layers may save the video information (name, ID, duration) in an excel document. Hence, it becomes inconvenient when they want to transfer the information from the excel document into the RevSlider plugin to create multiple video layers. 
+My friend actively uses RevSlider to create video layers in his website (http://learnah.org/) from the video information (name, ID, duration) saved in an excel document. Hence, it becomes inconvenient for him to transfer the information from the excel document into the RevSlider plugin to create multiple video layers. 
 
 ## Instructions
 1. Install OpenPyxl library `$ pip install openpyxl`.

@@ -3,6 +3,7 @@ import copy
 import re
 import os
 import sys
+import zipfile
 
 # category --> title, id, start time, end time
 TITLE, ID, START_TIME, END_TIME = range(4)
@@ -388,7 +389,7 @@ class Output:
 
         while (loop_index < len(video_class[row][key])):
             title_pre_replacement = video_class[row][key][
-                TITLE] + ' part ' + str(title_index) + '/' + str(total_title_index)
+                TITLE] + ' ' + str(title_index) + '/' + str(total_title_index)
             title_index += 1
 
             if len(video_class[row][key][loop_index]) > 6:
@@ -504,12 +505,10 @@ class Output:
     def makedir(self, file_name):
         """create a folder"""
         try:
-            os.makedirs(file_name)
-        except:
-            print(
-                "Unable to create the folder.\nPlease create a folder manually and try again.")
-            print("Folder name: Exported excel_name.xlsx sheet_name")
-            sys.exit()
+            if not os.path.isdir("../{0}".format(file_name)):
+                os.makedirs(file_name)
+        except FileExistsError:
+            pass
 
     def cddir(self, file_name):
         """enter the folder"""
@@ -539,6 +538,7 @@ class Output:
         .txt files
         """
         file_name = "Exported {0} {1}".format(excel_name, sheet_name)
+        
         self.makedir(file_name)
 
         for num_slides in range(1, len(video_class) + 1):
@@ -558,14 +558,35 @@ class Output:
             final = self.head_text + self.body_text + self.end_text0
 
             self.cddir(file_name)
-            with open("{0} {1} i{2}.txt".format(excel_name, sheet_name, num_slides), "w+") as f:
-                f.truncate()
-                f.write(final)
-                print("Generated: ", f)
+            file = FileOutput()
+            file.create_txt(final)
+            file.create_zip(num_slides)
+            file.remove()
             self.exitdir()
 
             self.empty()
 
+class FileOutput:
+
+    def __init__(self):
+        self.text = "slider_export.txt"
+
+    def create_txt(self, content):
+        with open(self.text, "w+") as f:
+            f.truncate()
+            f.write(content)
+            print("Generated: {0}".format(self.text))
+
+    def create_zip(self, num_slides):
+        zf = zipfile.ZipFile('i{0}.zip'.format(num_slides), 'w')
+        try:
+            print('Zip {0} into i{1}.zip\n'.format(self.text,num_slides))
+            zf.write(self.text)
+        finally:
+            zf.close()
+
+    def remove(self):
+        os.remove(self.text)
 
 class FileNameError(Exception):
     pass
@@ -613,7 +634,7 @@ def readSheet(excel_file):
     """
     while True:
         try:
-            sheet_name = input("Sheet name: ")
+            sheet_name = input("Sheet name (case sensitive): ")
             sheet = excel_file.get_sheet_by_name(sheet_name)
             return sheet_name, sheet
         except KeyError:
