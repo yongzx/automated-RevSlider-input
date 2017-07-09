@@ -12,10 +12,10 @@ class FileOutput:
             f.write(content)
             print("Generated: {0}".format(self.text))
 
-    def create_zip(self, num_slides):
-        zf = zipfile.ZipFile('i{0}.zip'.format(num_slides), 'w')
+    def create_zip(self, slider, num_slides):
+        zf = zipfile.ZipFile('{0}{1}.zip'.format(slider,num_slides), 'w')
         try:
-            print('Zip {0} into i{1}.zip\n'.format(self.text,num_slides))
+            print('Zip {0} into {1}{2}.zip\n'.format(self.text,slider,num_slides))
             zf.write(self.text)
         finally:
             zf.close()

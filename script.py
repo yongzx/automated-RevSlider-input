@@ -9,10 +9,10 @@ if __name__ == "__main__":
     # obtain excel file and sheet name
     excel_name, excel_file = readFile()
     sheet_name, sheet = readSheet(excel_file)
-
+    slider = readSlider()
     # processing information in the particular sheet
     video.read(topic, sheet)
 
     # output
     print("Total slides: ", len(video))
-    template.export(excel_name, sheet_name, video)
+    template.export(excel_name, sheet_name, video, slider)

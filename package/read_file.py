@@ -49,5 +49,13 @@ def readSheet(excel_file):
         except KeyError:
             print("Sheet '{0}' does not exist. \n".format(sheet_name))
 
+def readSlider():
+    slider = input("Slider (i.e., i, j, k, ...): ")
+    response = input("Are you sure '{0}' is the slider you want? Type 'y' if yes, 'n' if no.\n".format(slider))
+    while response != 'y':
+        slider = input("Slider (i.e., i, j, k, ...): ")
+        response = input("Are you sure '{0}' is the slider you want? Type 'y' if yes, 'n' if no.\n".format(slider))
+    return slider
+
 class FileNameError(Exception):
     pass

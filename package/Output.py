@@ -54,13 +54,13 @@ class Output:
         self.SLIDE_ORDER = 1
         self.INDEX = 0
 
-    def modify_HeadSegment(self, row):
+    def modify_HeadSegment(self, row, slider):
         """
         modify the title for the to-be-imported file.
         """
         string_to_replace = r's:5:"title";s:2:"i1";s:5:"alias";s:2:"i1";s:9:"shortcode";s:23:"\[rev_slider alias="i1"]"'
-        replacement_in_tuple = ('s:5:"title";s:2:"i', str(row), '";s:5:"alias";s:2:"i', str(row),
-                                '";s:9:"shortcode";s:23:"[rev_slider alias="i', str(row), '"]"')
+        replacement_in_tuple = ('s:5:"title";s:2:"', slider + str(row), '";s:5:"alias";s:2:"', slider + str(row),
+                                '";s:9:"shortcode";s:23:"[rev_slider alias="', slider + str(row), '"]"')
 
         replacement_string = ''.join(replacement_in_tuple)
         changed = re.sub(string_to_replace,
@@ -78,7 +78,7 @@ class Output:
         changed = re.sub(string_to_replace, replacement_string, self.head_text)
         self.head_text = changed
 
-    def modify_Body(self, row, body_text, video_class):
+    def modify_Body(self, row, body_text, video_class, slider):
         """
         check the amount of information in a particular cell
 
@@ -90,12 +90,12 @@ class Output:
         for key in range(1, len(video_class[row]) + 1):
             if len(video_class[row][key]) == 4:
                 self.modify_Body1(row, key, body_text,
-                                  video_class)  # create a slide
+                                  video_class, slider)  # create a slide
             elif len(video_class[row][key]) > 4:
                 # create multiple slides
-                self.modify_Body2(row, key, body_text, video_class)
+                self.modify_Body2(row, key, body_text, video_class, slider)
 
-    def modify_Body1(self, row, key, txtfile, video_class):
+    def modify_Body1(self, row, key, txtfile, video_class, slider):
         """
         modify the body template in the cell and put it in a list to be concatenated later.
         (for cell information == 4)
@@ -110,7 +110,7 @@ class Output:
 
         # index
         index_to_replace = r'xi:0'
-        index_replacement_in_tuple = ('i:', str(self.INDEX))
+        index_replacement_in_tuple = (slider, ':', str(self.INDEX))
         index_replacement_string = ''.join(index_replacement_in_tuple)
         self.INDEX += 1
 
@@ -167,7 +167,7 @@ class Output:
 
         self.list_body_text.append(sub_end_time)
 
-    def modify_Body2(self, row, key, txtfile, video_class):
+    def modify_Body2(self, row, key, txtfile, video_class, slider):
         """
         modify the body template in the cell and put it in a list to be concatenated later
         (for cell information > 4)
@@ -213,7 +213,7 @@ class Output:
                 loop_index += 1
 
             index_to_replace = r'xi:0'
-            index_replacement_in_tuple = ('i:', str(self.INDEX))
+            index_replacement_in_tuple = (slider, ':', str(self.INDEX))
             index_replacement_string = ''.join(index_replacement_in_tuple)
             self.INDEX += 1
 
@@ -267,9 +267,9 @@ class Output:
 
     # combine all the bodies
     # each body represents individual cell
-    def joinBody(self, row, video_class):
+    def joinBody(self, row, video_class, slider):
         """call the modify_Body"""
-        self.modify_Body(row, self.body_text0, video_class)
+        self.modify_Body(row, self.body_text0, video_class, slider)
         return self.list_body_text
 
     def modify_SystemId(self, txtfile):
@@ -333,7 +333,7 @@ class Output:
         os.chdir("..")
 
     # export the txt which is read to be imported
-    def export(self, excel_name, sheet_name, video_class):
+    def export(self, excel_name, sheet_name, video_class, slider):
         """
         Create a folder and save multiple the txt files which are ready to be exported into the folder
 
@@ -352,14 +352,14 @@ class Output:
         for num_slides in range(1, len(video_class) + 1):
             # modify body
             # minus one because the index of m_list of ExcelData starts from 0
-            body_in_list = self.joinBody(num_slides - 1, video_class)
+            body_in_list = self.joinBody(num_slides - 1, video_class, slider)
             body = ''.join(body_in_list)
             self.modify_SystemId('systemId.txt')
             self.body_text = body
 
             # modify the header of template
             # placed after body is modified because updated INDEX is needed
-            self.modify_HeadSegment(num_slides)
+            self.modify_HeadSegment(num_slides, slider)
             self.modify_HeadSlidesN()
 
             # concatenate the header, the body and the footer
@@ -368,7 +368,7 @@ class Output:
             self.cddir(file_name)
             file = FileOutput.FileOutput()
             file.create_txt(final)
-            file.create_zip(num_slides)
+            file.create_zip(slider, num_slides)
             file.remove()
             self.exitdir()
 
