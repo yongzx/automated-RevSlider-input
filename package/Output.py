@@ -346,7 +346,7 @@ class Output:
         .txt files
         """
         file_name = "Exported {0} {1}".format(excel_name, sheet_name)
-        
+
         self.makedir(file_name)
 
         for num_slides in range(1, len(video_class) + 1):
@@ -373,5 +373,3 @@ class Output:
             self.exitdir()
 
             self.empty()
-
-
