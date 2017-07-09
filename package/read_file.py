@@ -1,5 +1,7 @@
 import re
 import openpyxl
+import os
+import sys
 
 def readFile():
     """
@@ -13,6 +15,7 @@ def readFile():
     name of the excel file --- str
     workbook ---openpyxl
     """
+    os.chdir("Excel Files")
     while True:
         try:
             excel_name = input(
@@ -20,6 +23,7 @@ def readFile():
             if re.search(".xlsx", excel_name) is None:
                 raise FileNameError
             excel_file = openpyxl.load_workbook(excel_name)
+            os.chdir("..")
             return excel_name, excel_file
         except FileNameError:
             print("You forgot to put .xlsx in your file name. \n")
